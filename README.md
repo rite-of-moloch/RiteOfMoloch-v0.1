@@ -1,22 +1,12 @@
-# Hardhat Hackathon Boilerplate
-
-This repository contains a sample project that you can use as the starting point
-for your Ethereum project. It's also a great fit for learning the basics of
-smart contract development.
-
-This project is intended to be used with the
-[Hardhat Beginners Tutorial](https://hardhat.org/tutorial), but you should be
-able to follow it by yourself by reading the README and exploring its
-`contracts`, `tests`, `scripts` and `frontend` directories.
-
+# RiteOfMoloch-v0.1
 ## Quick start
 
 The first things you need to do are cloning this repository and installing its
 dependencies:
 
 ```sh
-git clone https://github.com/nomiclabs/hardhat-hackathon-boilerplate.git
-cd hardhat-hackathon-boilerplate
+git clone https://github.com/rite-of-moloch/RiteOfMoloch-v0.1.git
+cd RiteOfMoloch-v0.1
 npm install
 ```
 
