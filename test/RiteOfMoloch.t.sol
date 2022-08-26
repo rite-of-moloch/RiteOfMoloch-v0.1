@@ -44,15 +44,9 @@ contract RiteOfMolochTest is Test, InitializationData {
         
     }
 
-    /// @notice fuzz rand initialization variables
-    // function _initializationDataFuzz(
-    //     address m1, address s2, address t3, 
-    //     uint t4, uint a5, uint d6,
-    //  string calldata n7, string calldata s8, string calldata b9) {
-    //     initD = InitData(m1,s2,t3, t4, a5,a6,n7,s8,b9);
-    // }
-
-    function testSetsDeployerAsAdmin(
+/// @dev reverts, no message
+/// args=[0x0000000000000000000000000000000000000000, 0x0000000000000000000000000000000000000000, 0x0000000000000000000000000000000000000000, 1, 1, 1, 2]]
+    function testDeploys(
         address m1,
         address s2,
         address t3,
@@ -63,16 +57,27 @@ contract RiteOfMolochTest is Test, InitializationData {
      public 
      {  
         uint lastID = riteFactory.iid();
-        vm.assume(t4*a5*d6*fakeIID_ > 0);
+
+        assertTrue( lastID > 0, "iid is 0");
+        vm.assume(t4 > 0 && a5 > 0 && d6 > 0 && fakeIID_ > 0);
         vm.assume(fakeIID_ > lastID || fakeIID_ == 0);
 
-        InitD = InitData(m1,s2,t3, t4, a5,d6, "Name", "Symbol", "basUri");
+        /// test implementation exists for current iid
+        assertTrue( riteFactory.implementations(lastID) != address(0), "no implementation");
 
+        InitD = InitData(m1,s2,t3, t4, a5,d6, "Name", "Symbol", "baseUri");
+
+        /// test reverts on id bigger than iid
         vm.expectRevert("!implementation");
         riteFactory.createCohort(InitD, fakeIID_);
 
+        vm.prank(ADMIN);
+        address riteAddress = riteFactory.createCohort(InitD, lastID);
         
-        riteFactory.createCohort(InitD, lastID);
-        assertTrue(riteOfMoloch.hasRole(keccak256("ADMIN"),ADMIN));
+        riteOfMoloch = RiteOfMoloch(riteAddress);
+        assertTrue(riteOfMoloch.hasRole(keccak256("ADMIN"),address(riteFactory)));
+
+
+        /// NewRiteOfMoloch(cohortAddress: 0xf07907ab96e86b6f54e3a20a71ed1c4d1b3e5a41, deployer: 0x41444d494e000000000000000000000000000000, implementation: RiteOfMoloch: [0xc9db1acdc9aa5022f4a2362d0b2674a8a6310a4a], membershipCriteria: 0x0000000000000000000000000000000000000000, stakeToken: 0x0000000000000000000000000000000000000000, stakeAmount: 1, threshold: 1, time: 1)
     }
 }
