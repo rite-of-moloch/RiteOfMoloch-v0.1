@@ -119,7 +119,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         __ERC721_init(initData.name, initData.symbol);
 
         // Set the interface for accessing the DAO's public members mapping
-        dao = MolochDAO(initData.membershipCriteria);
+        dao = MolochDAO(initData.membershipCriteria); /// @note solution1: require membership criteria !=0
 
         // Store the treasury daoAddress
         treasury = initData.treasury;
@@ -128,7 +128,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         _token = Token(initData.stakingAsset);
 
         // Set the minimum shares
-        minimumShare = initData.threshold;
+        minimumShare = initData.threshold; /// @note this can be 0 - check if member
 
         // grant roles
         _grantRole(DEFAULT_ADMIN_ROLE, caller_);
@@ -398,13 +398,16 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
     function _checkMember() internal virtual {
 
         // access membership data from the DAO
-        MolochDAO.Member memory member = dao.members(msg.sender);
+        MolochDAO.Member memory member = dao.members(msg.sender); /// dao address can be 0. this errors?
+                                                                  /// wen nonmember all values 0
 
         // access the user's total shares
-        uint256 shares = member.shares;
+        uint256 shares = member.shares; /// @note extra write to storage
 
         // enforce that the user is a member
-        require(shares >= minimumShare, "You must be a member!");
+        require(shares >= minimumShare, "You must be a member!"); /// @note @minimumShare can be  0 -> always true   
+                                                                  /// moloch.mapping(address => Member) public members;
+                                                                  
     }
 
     /*************************
@@ -421,10 +424,10 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
     /**
      * @dev returns the user's member status
      */
-    function isMember(address user) public view returns (bool memberStatus) {
+    function isMember(address user) public view returns (bool memberStatus) { /// @note param memberStatus declared but not used
 
         // access membership data from the DAO
-        MolochDAO.Member memory member = dao.members(user);
+        MolochDAO.Member memory member = dao.members(user); /// on address(0) "EvmError: Revert" @note this is a bug
 
         // access the user's total shares
         uint256 shares = member.shares;
