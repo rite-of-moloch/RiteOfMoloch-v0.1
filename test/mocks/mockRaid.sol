@@ -7,6 +7,6 @@ contract MockRaid is ERC20("RaidToken", "RAID") {
     address raidWhale = address(bytes20("HAS_MAX_RAID"));
 
     constructor(){
-        _mint(msg.sender, type(uint256).max /2 );
+        _mint(msg.sender, type(uint256).max / 2 );
     }
 }

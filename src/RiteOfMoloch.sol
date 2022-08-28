@@ -63,7 +63,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
     event Feedback(address user, address treasury, string feedback);
 
     // initiation participant token balances
-    mapping(address => uint256) internal _staked;
+    mapping(address => uint256) internal _staked; // @todo this should maybe be public. only dedadline usable to check if initiate but not member
 
     // the time a participant joined the initiation
     mapping(address => uint256) public deadlines;
@@ -128,7 +128,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         _token = Token(initData.stakingAsset);
 
         // Set the minimum shares
-        minimumShare = initData.threshold; /// @note this can be 0 - check if member
+        minimumShare = initData.threshold; /// @note this can be 0 - when 0 - all are members
 
         // grant roles
         _grantRole(DEFAULT_ADMIN_ROLE, caller_);
@@ -242,7 +242,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         require(newMaxTime > 0, "Minimum duration must be greater than 0!");
 
         // set the maximum length of time for initiations
-        maximumTime = newMaxTime;
+        maximumTime = newMaxTime; 
 
         // log the new duration before stakes can be slashed
         emit ChangedTime(newMaxTime);
@@ -304,7 +304,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
      * @dev Claims the successful new members stake
      */
     function _claim() internal virtual returns (bool) {
-        address msgSender = msg.sender;
+        address msgSender = msg.sender; /// @note ...I wonder why.
         // enforce that the initiate has stake
         require(_staked[msgSender] > 0, "User has no stake!!");
 
@@ -359,7 +359,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
             // access each initiate's starting time
             uint256 deadline = deadlines[initiate];
 
-            if (block.timestamp > deadline && _staked[initiate] > 0) {
+            if (block.timestamp > deadline && _staked[initiate] > 0) { /// @note case: initiate is member, but has not yet claimStake(); 
 
                 // access each initiate's balance
                 uint256 balance = _staked[initiate];
@@ -428,9 +428,13 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
 
         // access membership data from the DAO
         MolochDAO.Member memory member = dao.members(user); /// on address(0) "EvmError: Revert" @note this is a bug
-
+                                                             /// memberStatus = member.exists; 
         // access the user's total shares
         uint256 shares = member.shares;
+
+        /// @dev alternative:
+        // if (shares >= minimumShare) memberStatus = member.exists;
+        /// duplicate return logic
 
         if (shares >= minimumShare) {
             return true;

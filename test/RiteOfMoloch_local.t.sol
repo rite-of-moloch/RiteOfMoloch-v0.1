@@ -9,6 +9,8 @@ import "../src/InitializationData.sol";
 import "./mocks/mockRaid.sol";
 // import "../../Moloch.sol";
 
+// @parseb
+/// @notice tests (local) deployment roles and 0 values 
 contract RiteOfMolochTest is Test, InitializationData {
 
     address ADMIN = address(bytes20("ADMIN"));
@@ -39,6 +41,7 @@ contract RiteOfMolochTest is Test, InitializationData {
         raidToken.transfer(MEMBER, amt);
         vm.stopPrank();
         
+
     }
 
 /// @dev reverts, no message
@@ -114,17 +117,16 @@ contract RiteOfMolochTest is Test, InitializationData {
         //const member = "0xdf1064632754674acb1b804f2c65849d016eaf9d";
 
 
-    function getMoloch() public returns ( MolochDAO Moloch) {
-        vm.createSelectFork(vm.envString("gnosis_rpc"), 19080190);
-        Moloch = MolochDAO(s3DaoAddress);
-    }
+    // function getMoloch() public returns ( MolochDAO Moloch) {
+    //     Moloch = MolochDAO(s3DaoAddress);
+    // }
 
 
 
 
     //     struct InitData {
     //     address membershipCriteria; - when this is 0 Moloch(0).members error reachable
-    //     address stakingAsset;
+    //     address stakingAsset; - when this is 0 .transferFrom(...) error reachable
     //     address treasury;
     //     uint256 threshold; - when this is 0, everyone is a member.
     //     uint256 assetAmount;
@@ -134,8 +136,7 @@ contract RiteOfMolochTest is Test, InitializationData {
     //     string baseUri;
     // }
 
-    function testZeroValues() public {
-        address rOM0 = riteFactory.implementations(1);
+    function testZeroValues1() public {
         address at;
 
         vm.expectRevert("Minimum stake must be greater than zero!");
@@ -158,7 +159,7 @@ contract RiteOfMolochTest is Test, InitializationData {
 
         vm.startPrank(address(32423523), address(32423523));
 
-        vm.expectRevert(); /// "EvmError: Revert" @note this is a bug: calls Moloch(address(0)).members(msg.sender); 
+        vm.expectRevert(); /// "EvmError: Revert" @note bug: calls Moloch(address(0)).members(msg.sender); 
         riteOfMoloch.isMember(address(306761337));
         
         assertTrue(address(32423523).code.length == 0, 'Address is contract' );
@@ -166,15 +167,7 @@ contract RiteOfMolochTest is Test, InitializationData {
         vm.expectRevert();  ///0x0000…0000::transferFrom 
         riteOfMoloch.joinInitiation(address(32423523));
         vm.stopPrank();
-
-        /// forks gnosis moloch
-        assertTrue(address(getMoloch()) == s3DaoAddress, 'not Moloch');
-
-        //////// Instance 2 :  1 0 0 0 1 1 - - -
-
-
-
     }
-    
+
 
 }
