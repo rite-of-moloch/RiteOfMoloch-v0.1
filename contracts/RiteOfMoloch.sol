@@ -239,7 +239,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
      */
     function setMaxDuration(uint256 newMaxTime) public onlyRole(OPERATOR) {
         // enforce that the minimum time is greater than 1 week
-        require(newMaxTime > 0, "Minimum duration must be greater than 0!");
+        require(newMaxTime > 1 weeks, "min. 1 week");
 
         // set the maximum length of time for initiations
         maximumTime = newMaxTime;
