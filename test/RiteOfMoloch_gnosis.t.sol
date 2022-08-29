@@ -178,12 +178,15 @@ contract RiteOfMolochTest is Test, InitializationData {
         assertTrue( riteOfMoloch.isMember(hackermansMember)); //fake
         ///
         
-        skip(maxTime * 2);
+        // skip(maxTime * 2);
 
         /// member slashes member that has not claimed yet <---- 'big trouble'
-        address[] memory lambs = new address[](3);
+        address[] memory lambs = new address[](5);
         lambs[0] = hasClainedUngriefable;
         lambs[1] = hasNotClaimedGriefable;
+        lambs[2] = lambs[0];
+        lambs[3] = lambs[1];
+        lambs[4] = lambs[2];
 
 
         /// hackermaans has 0 slashed balance
@@ -198,18 +201,18 @@ contract RiteOfMolochTest is Test, InitializationData {
         riteOfMoloch.claimStake();
         assertTrue(bfClaim < raidToken.balanceOf(hasClainedUngriefable), "claim unsuccessful");
         
-        vm.prank(hackermansMember, hackermansMember);
-        riteOfMoloch.sacrifice(lambs);
+        // vm.prank(hackermansMember, hackermansMember);
+        // riteOfMoloch.sacrifice(lambs);
 
-        assertTrue(riteOfMoloch.totalSlash(hackermansMember) == 5000000000000000000000, "script kiddie for real");
+        // assertTrue(riteOfMoloch.totalSlash(hackermansMember) == 5000000000000000000000, "script kiddie for real");
 
-        {
-        /// check if still initiate
-        assertTrue(riteOfMoloch.deadlines(lambs[0]) == 0, "still initialte");
-        assertTrue(riteOfMoloch.deadlines(lambs[1]) == 0, "still initiate");
-        }
+        // {
+        // /// check if still initiate
+        // assertTrue(riteOfMoloch.deadlines(lambs[0]) == 0, "still initialte");
+        // assertTrue(riteOfMoloch.deadlines(lambs[1]) == 0, "still initiate");
+        // }
         
-        /// Potential Solution:
+        // / Potential Solution:
         // If member continue ! do not slash
     }
 
