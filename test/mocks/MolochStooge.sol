@@ -14,8 +14,7 @@ contract MolochStooge {
     }
 
     function members(address memberAddress) external view returns (Member memory member) {
-        member = Member(memberAddress, 10000000000000, 34523, true, 99, 0
-        );
+        member = Member(memberAddress, 10000000000000, 34523, true, 99, 0 );
     }
 
 

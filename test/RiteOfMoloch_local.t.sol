@@ -59,8 +59,9 @@ contract RiteOfMolochTest is Test, InitializationData {
         uint lastID = riteFactory.iid();
 
         assertTrue( lastID > 0, "iid is 0");
-        vm.assume(t4 > 0 && a5 > 0 && d6 > 0 && fakeIID_ > 0);
+        vm.assume(t4 > 0 && a5 > 0 && d6 > 2 weeks && fakeIID_ > 0);
         vm.assume(fakeIID_ > lastID || fakeIID_ == 0);
+        vm.assume(d6 > 1 weeks);
 
         /// test implementation exists for current iid
         assertTrue( riteFactory.implementations(lastID) != address(0), "no implementation");
@@ -109,7 +110,7 @@ contract RiteOfMolochTest is Test, InitializationData {
         uint a5,
         uint d6
     ) public returns( RiteOfMoloch ) {
-        InitD = InitData(m1,s2,t3, t4, a5,d6, "Name", "Symbol", "baseUri");
+        InitD = InitData(m1,s2,t3, t4, a5,2 weeks, "Name", "Symbol", "baseUri");
         uint lastID = riteFactory.iid();
         riteOfMoloch = RiteOfMoloch( riteFactory.createCohort(InitD, lastID));
     }
@@ -140,16 +141,16 @@ contract RiteOfMolochTest is Test, InitializationData {
         address at;
 
         vm.expectRevert("Minimum stake must be greater than zero!");
-        InitD = InitData(address(0), address(0), address(0),0,0,0,"name","symbol","uri");  
+        InitD = InitData(address(0), address(0), address(0),0,0,2 weeks,"name","symbol","uri");  
         at= riteFactory.createCohort(InitD, 1);
         
-        vm.expectRevert("Minimum duration must be greater than 0!");    
+        vm.expectRevert('min. 1 week');    
         InitD = InitData(address(0), address(0), address(0),0,1,0,"name","symbol","uri");  
         at = riteFactory.createCohort(InitD, 1);
         
         //////// Instance 1 :  0 0 0 0 1 1 - - -
         /// @note makes minimumShare =0, which in turn makes everyone a member since _checkMember will always be true in this state.
-        InitD = InitData(address(0), address(0), address(0),0,1,1,"name","symbol","uri");  
+        InitD = InitData(address(0), address(0), address(0),0,1,2 weeks,"name","symbol","uri");  
         at = riteFactory.createCohort(InitD, 1);
         assertTrue(at != address(0));
         riteOfMoloch = RiteOfMoloch(at);
