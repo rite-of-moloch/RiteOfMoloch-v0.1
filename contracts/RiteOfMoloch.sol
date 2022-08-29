@@ -299,12 +299,12 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         // enforce initiate needs to: have stake, be member, not be contract
         require(staked[msg.sender] > 0, "No valid claim");
         s = _token.transfer(msg.sender, staked[msg.sender]);
+        // log data for this successful claim
+        emit Claim(msg.sender, staked[msg.sender]);
         // delete the balance
         delete staked[msg.sender];
         // delete the deadline timestamp
         delete deadlines[msg.sender];
-        // log data for this successful claim
-        emit Claim(msg.sender, balance);
     }
 
     /**
@@ -336,10 +336,12 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         uint256 total;
         uint i;
         
-        for (i < _failedInitiates.length) {
+        while (i < _failedInitiates.length) {
             // store each initiate's address
             address initiate = _failedInitiates[i];
-
+            // increments i
+            unchecked { ++i; }
+            
             if (block.timestamp > deadlines[initiate] && ! isMember(initiate)) {
                 // calculate the total blood debt
                 total += staked[initiate];
@@ -359,8 +361,6 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
                 continue;
 
             }
-            // increments i
-            unchecked { ++i; }
         }
 
         // drain the life force from the sacrifice
