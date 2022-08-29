@@ -433,7 +433,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         uint256 shares = member.shares;
 
         /// @dev alternative:
-        // if (shares >= minimumShare) memberStatus = member.exists;
+        // if (member.exists && shares >= minimumShare) memberStatus = member.exists;
         /// duplicate return logic
 
         if (shares >= minimumShare) {

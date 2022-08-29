@@ -112,24 +112,24 @@ contract RiteOfMolochTest is Test, InitializationData {
     function testInitiateGriefingAttack() public {
 
         /// Thesis
-        /// A member can slash fellow members that have not yet claimed their stake back
+        /// Any member can slash fellow members that have not yet claimed their stake back
         /// this opens up a race condition  / griefing attack
-        /// no gain only pain
+        /// no gain mostly pain
 
         /// actors
         address hasClainedUngriefable = address(bytes20(keccak256("hasClaimedUngriefable")));
         address hasNotClaimedGriefable = address(bytes20(keccak256("hasNotClaimedGriefable")));
-        address hackermansCohortMember = address(bytes20(keccak256("hackermansCohortMember")));
+        address hackermansMember = address(bytes20(keccak256("hackermansMember")));
 
         /// mainnet cohort initialization params (https://blockscout.com/xdai/mainnet/tx/0xe8123d8b9b4e563bcd1bc8e91f48f6a43087edb787ad96fdd2af693037e7638a)
 
         // address moloch = 0xfe1084bC16427e5EB7f13Fc19bCD4E641F7d571f;
         address moloch = address(fakeMoloch);
         address implementation = 0x4589b0760baD5fAfBdAD8f3e8227991e8Ee99160;
-        address stakingAsset = 0x18E9262e68Cc6c6004dB93105cc7c001BB103e49;
+        //address stakingAsset = 0x18E9262e68Cc6c6004dB93105cc7c001BB103e49;
         //address stakingAsset = 0xf8D1677c8a0c961938bf2f9aDc3F3CFDA759A9d9;
         address treasury = implementation;
-        uint threashold = 100;
+        // uint threashold = 100; /// stack
         uint assetAmount = 5000000000000000000000;
         uint maxTime = 15780000;
 
@@ -142,11 +142,11 @@ contract RiteOfMolochTest is Test, InitializationData {
         vm.startPrank(raidWhale, raidWhale);
         raidToken.transfer(hasClainedUngriefable, assetAmount);
         raidToken.transfer(hasNotClaimedGriefable, assetAmount); 
-        raidToken.transfer(hackermansCohortMember, assetAmount); 
+        raidToken.transfer(hackermansMember, assetAmount); 
         vm.stopPrank();
 
 
-        InitD = InitData(moloch, raidTokenAddress, moloch, threashold, assetAmount, maxTime, "Rite of Moloch - Cohort V", "ROM", "https://ipfs.io/ipfs/Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u");  
+        InitD = InitData(moloch, raidTokenAddress, moloch, 100, assetAmount, maxTime, "Rite of Moloch - Cohort V", "ROM", "https://ipfs.io/ipfs/Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u");  
         address at = riteFactory.createCohort(InitD, 1);
         console.log(at);
         riteOfMoloch = RiteOfMoloch(at);
@@ -171,33 +171,42 @@ contract RiteOfMolochTest is Test, InitializationData {
 
         skip(100);
 
-        vm.prank(hackermansCohortMember,hackermansCohortMember);
+        vm.prank(hackermansMember,hackermansMember);
         raidToken.approve(address(riteOfMoloch), type(uint).max);
-        vm.prank(hackermansCohortMember,hackermansCohortMember);
-        riteOfMoloch.joinInitiation(hackermansCohortMember);
-        assertTrue( riteOfMoloch.isMember(hackermansCohortMember)); //fake
+        vm.prank(hackermansMember,hackermansMember);
+        riteOfMoloch.joinInitiation(hackermansMember);
+        assertTrue( riteOfMoloch.isMember(hackermansMember)); //fake
         ///
         
-        skip(maxTime + 1);
+        skip(maxTime * 2);
 
         /// member slashes member that has not claimed yet <---- 'big trouble'
         address[] memory lambs = new address[](3);
         lambs[0] = hasClainedUngriefable;
         lambs[1] = hasNotClaimedGriefable;
 
+
         /// hackermaans has 0 slashed balance
-        assertTrue(riteOfMoloch.totalSlash(hackermansCohortMember) == 0, "script kiddie already hackermans");
+        assertTrue(riteOfMoloch.totalSlash(hackermansMember) == 0, "script kiddie already hackermans");
+
+        /// on slash the .totalSlash() is incremented by _staked[initiate];
+        /// if both slash assetAmount * number of labs slashed
+
+        /// both lambs are member, but only one claims stake back
+        uint bfClaim = raidToken.balanceOf(hasClainedUngriefable);
+        vm.prank(hasClainedUngriefable, hasClainedUngriefable);
+        riteOfMoloch.claimStake();
+        assertTrue(bfClaim < raidToken.balanceOf(hasClainedUngriefable), "claim unsuccessful");
         
-        vm.prank(hackermansCohortMember);
+        vm.prank(hackermansMember, hackermansMember);
         riteOfMoloch.sacrifice(lambs);
 
+        assertTrue(riteOfMoloch.totalSlash(hackermansMember) == 5000000000000000000000, "script kiddie for real");
+
         {
-        /// hackermaans has 1+ slashed balance
-        assertTrue(riteOfMoloch.totalSlash(hackermansCohortMember) > 0, "true hackermans");
-        
         /// check if still initiate
-        assertTrue(riteOfMoloch.deadlines(lambs[0]) == 0, "not slashed");
-        assertTrue(riteOfMoloch.deadlines(lambs[1]) == 0, "not slashed");
+        assertTrue(riteOfMoloch.deadlines(lambs[0]) == 0, "still initialte");
+        assertTrue(riteOfMoloch.deadlines(lambs[1]) == 0, "still initiate");
         }
         
         /// Potential Solution:
