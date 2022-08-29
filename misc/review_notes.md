@@ -61,7 +61,7 @@ In such a state `isMember(anyAddress_)` results in a unnaccounted for EVM Error 
 
 
 ### Critical
-- it is currently possible for a member to slash other members; where 'other members' have not (yet) claimed their stake back. The success of this depends on the order of transactions. Slashing does not check if one is or is not a member but if one (still) has a stake. All initiates that: (1) are members, (2) have not claimed their stake and the deadline for becoming a member has passed
+- it is currently possible for a member to slash other members; where 'other members' have not (yet) claimed their stake back. The success of this depends on the order of transactions. Slashing does not check if one is or is not a member but if one (still) has a stake.  Members that can be slashed: (1) are members, (2) have not claimed their stake in context: deadline for becoming a member has passed.
 
     ```
     function testInitiateGriefingAttack() public {
