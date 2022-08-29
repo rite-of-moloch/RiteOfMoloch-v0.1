@@ -1,3 +1,4 @@
+const riteABI = require('../artifacts/contracts/RiteOfMoloch.sol/RiteOfMoloch.json')
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
 async function main() {
@@ -5,8 +6,8 @@ async function main() {
   if (network.name === "hardhat") {
     console.warn(
       "You are trying to deploy a contract to the Hardhat Network, which" +
-        "gets automatically created and destroyed every time. Use the Hardhat" +
-        " option '--network localhost'"
+      "gets automatically created and destroyed every time. Use the Hardhat" +
+      " option '--network localhost'"
     );
   }
 
@@ -19,14 +20,41 @@ async function main() {
 
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  const Token = await ethers.getContractFactory("Token");
-  const token = await Token.deploy();
-  await token.deployed();
+  const Factory = await ethers.getContractFactory("RiteOfMolochFactory");
+  const factory = await Factory.deploy();
+  await factory.deployed();
 
-  console.log("Token address:", token.address);
+  console.log("Factory address:", factory.address);
 
-  // We also save the contract's artifacts and address in the frontend directory
-  saveFrontendFiles(token);
+  //Random data
+  const initData = {
+    membershipCriteria: "0x7bde8f8a3d59b42d0d8fab3a46e9f42e8e3c2de8",
+    stakingAsset: "0x18e9262e68cc6c6004db93105cc7c001bb103e49",
+    treasury: "0x7bde8f8a3d59b42d0d8fab3a46e9f42e8e3c2de8",
+    threshold: 10,
+    assetAmount: ethers.utils.parseEther('10'),
+    duration: 10,
+    name: "RiteOfMolochSBT",
+    symbol: "SBTMoloch",
+    baseUri: ""
+  }
+
+  const tx = await factory.createCohort(initData, 1);
+  const receipt = await tx.wait()
+
+  const riteAddress = receipt.events.filter(e => e.event == 'NewRiteOfMoloch')[0].args[0];
+
+  console.log('RiteOfMoloch address', riteAddress);
+
+  riteOfMoloch = new ethers.Contract(
+    riteAddress,
+    riteABI.abi,
+    ethers.provider
+  )
+
+  //Checks to see if contract is deployed correcty. Treasury address should == 0x7bde8f8a3d59b42d0d8fab3a46e9f42e8e3c2de8
+  const treasuryAddress = await riteOfMoloch.treasury();
+  console.log('Treasury Address', treasuryAddress);
 }
 
 function saveFrontendFiles(token) {

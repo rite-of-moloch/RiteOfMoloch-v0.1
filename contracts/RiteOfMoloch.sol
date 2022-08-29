@@ -351,7 +351,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
             // access each initiate's starting time
             uint256 deadline = deadlines[initiate];
 
-            if (block.timestamp > deadline) {
+            if (block.timestamp > deadline && _staked[initiate] > 0) {
 
                 // access each initiate's balance
                 uint256 balance = _staked[initiate];
@@ -381,7 +381,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         require(_token.transfer(treasury, total), "Failed Sacrifice!");
 
         // increase the slasher's essence
-        totalSlash[msg.sender] += _failedInitiates.length;
+        totalSlash[msg.sender] += total;
     }
 
     /**
