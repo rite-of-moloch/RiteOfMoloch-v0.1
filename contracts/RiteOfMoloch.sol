@@ -63,7 +63,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
     event Feedback(address user, address treasury, string feedback);
 
     // initiation participant token balances
-    mapping(address => uint256) internal _staked;
+    mapping(address => uint256) public staked;
 
     // the time a participant joined the initiation
     mapping(address => uint256) public deadlines;
@@ -199,7 +199,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
     /**
      * @dev Allows DAO members to claim their initiation stake
      */
-    function claimStake() external onlyMember {
+    function claimStake() external onlyMember callerIsUser {
         require(_claim(), "Claim failed!");
     }
 
@@ -239,7 +239,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
      */
     function setMaxDuration(uint256 newMaxTime) public onlyRole(OPERATOR) {
         // enforce that the minimum time is greater than 1 week
-        require(newMaxTime > 0, "Minimum duration must be greater than 0!");
+        require(newMaxTime > 1 weeks, "min. 1 week");
 
         // set the maximum length of time for initiations
         maximumTime = newMaxTime;
@@ -284,7 +284,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         require(balanceOf(_user) == 0, "Already joined the initiation!");
 
         // change the initiate's stake total
-        _staked[_user] = minimumStake;
+        staked[_user] = minimumStake;
 
         // set the initiate's deadline
         deadlines[_user] = block.timestamp + maximumTime;
@@ -295,25 +295,16 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
     /**
      * @dev Claims the successful new members stake
      */
-    function _claim() internal virtual returns (bool) {
-        address msgSender = msg.sender;
-        // enforce that the initiate has stake
-        require(_staked[msgSender] > 0, "User has no stake!!");
-
-        // store the user's balance
-        uint256 balance = _staked[msgSender];
-
-        // delete the balance
-        delete _staked[msgSender];
-
-        // delete the deadline timestamp
-        delete deadlines[msgSender];
-
+    function _claim() internal virtual returns (bool s) {
+        // enforce initiate needs to: have stake, be member, not be contract
+        require(staked[msg.sender] > 0, "No valid claim");
+        s = _token.transfer(msg.sender, staked[msg.sender]);
         // log data for this successful claim
-        emit Claim(msgSender, balance);
-
-        // return the new member's original stake
-        return _token.transfer(msgSender, balance);
+        emit Claim(msg.sender, staked[msg.sender]);
+        // delete the balance
+        delete staked[msg.sender];
+        // delete the deadline timestamp
+        delete deadlines[msg.sender];
     }
 
     /**
@@ -343,27 +334,23 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
 
         // the total amount of blood debt
         uint256 total;
-
-        for (uint256 i = 0; i < _failedInitiates.length; ++i) {
+        uint i;
+        
+        while (i < _failedInitiates.length) {
             // store each initiate's address
             address initiate = _failedInitiates[i];
-
-            // access each initiate's starting time
-            uint256 deadline = deadlines[initiate];
-
-            if (block.timestamp > deadline && _staked[initiate] > 0) {
-
-                // access each initiate's balance
-                uint256 balance = _staked[initiate];
-
+            // increments i
+            unchecked { ++i; }
+            
+            if (block.timestamp > deadlines[initiate] && ! isMember(initiate)) {
                 // calculate the total blood debt
-                total += balance;
+                total += staked[initiate];
 
                 // log sacrifice data
-                emit Sacrifice(initiate, balance, msg.sender);
+                emit Sacrifice(initiate, staked[initiate], msg.sender);
 
                 // remove the sacrifice's balance
-                delete _staked[initiate];
+                delete staked[initiate];
 
                 // remove the sacrifice's starting time
                 delete deadlines[initiate];
@@ -374,7 +361,6 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
                 continue;
 
             }
-
         }
 
         // drain the life force from the sacrifice
@@ -391,12 +377,8 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
 
         // access membership data from the DAO
         MolochDAO.Member memory member = dao.members(msg.sender);
-
-        // access the user's total shares
-        uint256 shares = member.shares;
-
         // enforce that the user is a member
-        require(shares >= minimumShare, "You must be a member!");
+        require(member.exists, "You must be a member!");
     }
 
     /*************************
@@ -417,17 +399,7 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
 
         // access membership data from the DAO
         MolochDAO.Member memory member = dao.members(user);
-
-        // access the user's total shares
-        uint256 shares = member.shares;
-
-        if (shares >= minimumShare) {
-            return true;
-        }
-
-        else {
-            return false;
-        }
+        memberStatus = member.exists; 
     }
 
     /*************************

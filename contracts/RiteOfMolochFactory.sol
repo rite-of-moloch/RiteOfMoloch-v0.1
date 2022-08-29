@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// @author st4rgard3n, bitbeckers, MrDeadce11 Raid Guild
+// @author st4rgard3n, bitbeckers, MrDeadce11, parseb | Raid Guild
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
