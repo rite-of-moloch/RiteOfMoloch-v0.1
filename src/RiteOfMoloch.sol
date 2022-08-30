@@ -263,6 +263,11 @@ contract RiteOfMoloch is InitializationData, ERC721Upgradeable, AccessControlUpg
         emit ChangedShares(newShareThreshold);
     }
 
+    
+    function setBaseURI(string calldata newBaseURI) public onlyRole(ADMIN) {
+        _setBaseUri(newBaseURI);
+    }
+
     /*************************
      PRIVATE OR INTERNAL
      *************************/
